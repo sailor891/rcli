@@ -17,22 +17,22 @@
 # this list would mean the nix crate, as well as any of its exclusive
 # dependencies not shared by any other crates, would be ignored, as the target
 # list here is effectively saying which targets you are building for.
-# targets = [
-#   # The triple can be any string, but only the target triples built in to
-#   # rustc (as of 1.40) can be checked against actual config expressions
-#   #{ triple = "x86_64-unknown-linux-musl" },
-#   # You can also specify which target_features you promise are enabled for a
-#   # particular target. target_features are currently not validated against
-#   # the actual valid features supported by the target architecture.
-#   #{ triple = "wasm32-unknown-unknown", features = ["atomics"] },
-# ]
+targets = [
+  # The triple can be any string, but only the target triples built in to
+  # rustc (as of 1.40) can be checked against actual config expressions
+  #{ triple = "x86_64-unknown-linux-musl" },
+  # You can also specify which target_features you promise are enabled for a
+  # particular target. target_features are currently not validated against
+  # the actual valid features supported by the target architecture.
+  #{ triple = "wasm32-unknown-unknown", features = ["atomics"] },
+]
 
 # This section is considered when running `cargo deny check advisories`
 # More documentation for the advisories section can be found here:
 # https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html
 [advisories]
 # The path where the advisory database is cloned/fetched into
-db-path = "C:/Users/我的花魁/.cargo/advisory-db"
+db-path = "~/.cargo/advisory-db"
 # The url(s) of the advisory databases to use
 db-urls = ["https://github.com/rustsec/advisory-db"]
 # The lint level for security vulnerabilities
@@ -48,7 +48,7 @@ notice = "warn"
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
 ignore = [
-  #"RUSTSEC-0000-0000",
+  # "RUSTSEC-0000-0000",
 ]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
@@ -162,15 +162,15 @@ allow = [
   #{ name = "ansi_term", version = "=0.11.0" },
 ]
 # List of crates to deny
-# deny = [
-#   # Each entry the name of a crate and a version range. If version is
-#   # not specified, all versions will be matched.
-#   #{ name = "ansi_term", version = "=0.11.0" },
-#   #
-#   # Wrapper crates can optionally be specified to allow the crate when it
-#   # is a direct dependency of the otherwise banned crate
-#   #{ name = "ansi_term", version = "=0.11.0", wrappers = [] },
-# ]
+deny = [
+  # Each entry the name of a crate and a version range. If version is
+  # not specified, all versions will be matched.
+  #{ name = "ansi_term", version = "=0.11.0" },
+  #
+  # Wrapper crates can optionally be specified to allow the crate when it
+  # is a direct dependency of the otherwise banned crate
+  #{ name = "ansi_term", version = "=0.11.0", wrappers = [] },
+]
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
   #{ name = "ansi_term", version = "=0.11.0" },
