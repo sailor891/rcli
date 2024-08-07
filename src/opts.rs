@@ -13,6 +13,21 @@ pub struct Opts {
 pub enum SubCommand {
     #[command(name = "csv", about = "CSV to Others")]
     Csv(CsvOpts),
+    #[command(name = "genpass", about = "Generate Password")]
+    GenPass(GenPassOpts),
+}
+#[derive(Debug, Parser)]
+pub struct GenPassOpts {
+    #[arg(short, long, default_value_t = 16)]
+    pub length: usize,
+    #[arg(long, default_value_t = true)]
+    pub uppercase: bool,
+    #[arg(long, default_value_t = true)]
+    pub lowercase: bool,
+    #[arg(short, long, default_value_t = true)]
+    pub numbers: bool,
+    #[arg(long, default_value_t = true)]
+    pub symbols: bool,
 }
 #[derive(Debug, Clone, Copy)]
 pub enum OutputFormat {
@@ -49,9 +64,11 @@ fn verify_input_file(filename: &str) -> Result<String, &'static str> {
     }
     Ok(filename.into())
 }
+// 从&str转换为OutputFormat，实现将&str转为OutputFormat的trait（FromStr trait的from_str方法）
 fn parse_format(format: &str) -> Result<OutputFormat, anyhow::Error> {
     format.parse::<OutputFormat>()
 }
+// 从OutputFormat转换为&str
 impl From<OutputFormat> for &'static str {
     fn from(format: OutputFormat) -> Self {
         match format {
@@ -60,6 +77,7 @@ impl From<OutputFormat> for &'static str {
         }
     }
 }
+// 从&str转换为OutputFormat
 impl FromStr for OutputFormat {
     type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -70,6 +88,7 @@ impl FromStr for OutputFormat {
         }
     }
 }
+// 实现Display trait，用于将OutputFormat转换为字符串
 impl fmt::Display for OutputFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Into::<&str>::into(*self))

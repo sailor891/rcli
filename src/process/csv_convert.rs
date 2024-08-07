@@ -15,7 +15,7 @@ struct Player {
     #[serde(rename = "Kit Number")]
     kit: u8,
 }
-
+// 处理csv文件为json或yaml
 pub fn process_csv(input: &str, output: String, format: OutputFormat) -> Result<()> {
     let mut reader = Reader::from_path(input)?;
     let mut ret = Vec::with_capacity(128);
