@@ -2,7 +2,6 @@ use clap::Parser;
 use std::fmt;
 use std::path::Path;
 use std::str::FromStr;
-
 #[derive(Debug, Parser)]
 #[command(name="rcli",version,author,about,long_about=None)]
 pub struct Opts {
@@ -18,14 +17,18 @@ pub enum SubCommand {
 }
 #[derive(Debug, Parser)]
 pub struct GenPassOpts {
-    #[arg(short, long, default_value_t = 16)]
-    pub length: usize,
+    #[arg(short, long, value_parser=clap::value_parser!(u8).range(8..),default_value_t = 16)]
+    pub length: u8,
+
     #[arg(long, default_value_t = true)]
     pub uppercase: bool,
+
     #[arg(long, default_value_t = true)]
     pub lowercase: bool,
+
     #[arg(short, long, default_value_t = true)]
     pub numbers: bool,
+
     #[arg(long, default_value_t = true)]
     pub symbols: bool,
 }
@@ -51,7 +54,6 @@ pub struct CsvOpts {
     #[arg(long, default_value_t = true)]
     pub header: bool,
 }
-
 fn verify_input_file(filename: &str) -> Result<String, &'static str> {
     if filename.is_empty() {
         return Err("Input file is empty");
@@ -94,3 +96,11 @@ impl fmt::Display for OutputFormat {
         write!(f, "{}", Into::<&str>::into(*self))
     }
 }
+
+// fn verify_password_length(length: &str) -> anyhow::Result<usize, &str> {
+//     let length= length.parse::<usize>().unwrap();
+//     if length < 8 {
+//         return Err("Password length must be at least 8 characters");
+//     }
+//     Ok(length)
+// }
