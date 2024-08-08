@@ -2,36 +2,7 @@ use clap::Parser;
 use std::fmt;
 use std::path::Path;
 use std::str::FromStr;
-#[derive(Debug, Parser)]
-#[command(name="rcli",version,author,about,long_about=None)]
-pub struct Opts {
-    #[command(subcommand)]
-    pub cmd: SubCommand,
-}
-#[derive(Debug, Parser)]
-pub enum SubCommand {
-    #[command(name = "csv", about = "CSV to Others")]
-    Csv(CsvOpts),
-    #[command(name = "genpass", about = "Generate Password")]
-    GenPass(GenPassOpts),
-}
-#[derive(Debug, Parser)]
-pub struct GenPassOpts {
-    #[arg(short, long, value_parser=clap::value_parser!(u8).range(8..),default_value_t = 16)]
-    pub length: u8,
 
-    #[arg(long, default_value_t = true)]
-    pub uppercase: bool,
-
-    #[arg(long, default_value_t = true)]
-    pub lowercase: bool,
-
-    #[arg(short, long, default_value_t = true)]
-    pub numbers: bool,
-
-    #[arg(long, default_value_t = true)]
-    pub symbols: bool,
-}
 #[derive(Debug, Clone, Copy)]
 pub enum OutputFormat {
     Json,
@@ -96,11 +67,3 @@ impl fmt::Display for OutputFormat {
         write!(f, "{}", Into::<&str>::into(*self))
     }
 }
-
-// fn verify_password_length(length: &str) -> anyhow::Result<usize, &str> {
-//     let length= length.parse::<usize>().unwrap();
-//     if length < 8 {
-//         return Err("Password length must be at least 8 characters");
-//     }
-//     Ok(length)
-// }
