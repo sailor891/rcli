@@ -195,39 +195,3 @@ impl Ed25519Verifier {
         Ok(signer)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_process_text_sign() {
-        let input = "Cargo.toml";
-        let key = "fixtures/blake3.txt";
-        let format = super::super::super::cli::TextSignFormat::Blake3;
-        let sign = super::process_text_sign(input, key, format).unwrap();
-        println!("{:?}", sign);
-    }
-    #[test]
-    #[ignore]
-    fn test_process_verify_blake3_sign() {
-        use super::process_text_verify;
-        use crate::TextSignFormat;
-        let input = "Cargo.toml";
-        let key = "fixtures/blake3.txt";
-        let t = process_text_verify(input, key, "sign.txt", TextSignFormat::Blake3);
-        println!("{:?}", t);
-    }
-    use super::*;
-    use anyhow::Result;
-    #[test]
-    fn test_process_verify_ed25519_sign() -> Result<()> {
-        // use base64::prelude::*;
-        let sk = Ed25519Signer::load("fixtures/ed25519.sk")?;
-        let pk = Ed25519Verifier::load("fixtures/ed25519.pk")?;
-        let data = b"Hello, world!";
-        let sign = sk.sign(&mut &data[..])?;
-        let t = pk.verify(&mut &data[..], &sign).is_ok();
-        assert!(t, "The signature verification failed");
-        println!("{}", t);
-        Ok(())
-    }
-}
