@@ -82,6 +82,9 @@ pub fn process_text_generate(format: TextSignFormat) -> Result<HashMap<&'static 
         TextSignFormat::Ed25519 => Ed25519Signer::generate(),
     }
 }
+// fn get_key_decode(path: impl AsRef<Path>) {
+//     todo!()
+// }
 impl KeyLoader for Blake3 {
     fn load(path: impl AsRef<Path>) -> Result<Self> {
         let key = fs::read(path)?;
@@ -197,7 +200,7 @@ impl Ed25519Verifier {
 mod tests {
     #[test]
     fn test_process_text_sign() {
-        let input = "sign.txt";
+        let input = "Cargo.toml";
         let key = "fixtures/blake3.txt";
         let format = super::super::super::cli::TextSignFormat::Blake3;
         let sign = super::process_text_sign(input, key, format).unwrap();
