@@ -6,10 +6,9 @@ use base64::prelude::*;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use rand::rngs::OsRng;
 use std::collections::HashMap;
-use std::fs;
+use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-
 pub trait TextSign {
     // 动态分派reader
     fn sign(&self, reader: &mut dyn Read) -> Result<Vec<u8>>;
@@ -82,27 +81,29 @@ pub fn process_text_generate(format: TextSignFormat) -> Result<HashMap<&'static 
         TextSignFormat::Ed25519 => Ed25519Signer::generate(),
     }
 }
-// fn get_key_decode(path: impl AsRef<Path>) {
-//     todo!()
-// }
+fn get_key_decode(path: impl AsRef<Path>) -> Result<Vec<u8>> {
+    let mut buf = String::new();
+    let mut reader = File::open(path)?;
+    reader.read_to_string(&mut buf)?;
+    let buf = buf.trim();
+    let key = BASE64_STANDARD.decode(buf.as_bytes())?;
+    Ok(key)
+}
 impl KeyLoader for Blake3 {
     fn load(path: impl AsRef<Path>) -> Result<Self> {
-        let key = fs::read(path)?;
-        let key = BASE64_STANDARD.decode(key)?;
+        let key = get_key_decode(path)?;
         Self::try_new(&key)
     }
 }
 impl KeyLoader for Ed25519Signer {
     fn load(path: impl AsRef<Path>) -> Result<Self> {
-        let key = fs::read(path)?;
-        let key = BASE64_STANDARD.decode(&key)?;
+        let key = get_key_decode(path)?;
         Self::try_new(&key)
     }
 }
 impl KeyLoader for Ed25519Verifier {
     fn load(path: impl AsRef<Path>) -> Result<Self> {
-        let key = fs::read(path)?;
-        let key = BASE64_STANDARD.decode(key)?;
+        let key = get_key_decode(path)?;
         Self::try_new(&key)
     }
 }
