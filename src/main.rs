@@ -1,12 +1,13 @@
 use clap::Parser;
 use rcli::{
-    process_csv, process_decode, process_encode, process_genpass, process_text_generate,
-    process_text_sign, process_text_verify,
+    process_csv, process_decode, process_encode, process_genpass, process_http_serve,
+    process_text_generate, process_text_sign, process_text_verify,
 };
-use rcli::{Base64Subcommand, Opts, SubCommand, TextSubcommand};
+use rcli::{Base64Subcommand, HttpSubcommand, Opts, SubCommand, TextSubcommand};
 use std::fs;
-
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt::init();
     let opts = Opts::parse();
     match opts.cmd {
         SubCommand::Csv(opts) => {
@@ -53,6 +54,11 @@ fn main() -> anyhow::Result<()> {
                 for (k, v) in keys {
                     fs::write(opts.output.join(k), v)?;
                 }
+            }
+        },
+        SubCommand::Http(cmd) => match cmd {
+            HttpSubcommand::Serve(opts) => {
+                process_http_serve(opts.dir, opts.port).await?;
             }
         },
     }
