@@ -126,12 +126,3 @@ impl CmdExcutor for TextKeyGenerateOpts {
         Ok(())
     }
 }
-// impl CmdExcutor for TextSubcommand {
-//     async fn excutor(self) -> anyhow::Result<()> {
-//         match self {
-//             TextSubcommand::Sign(opts) => opts.excutor().await,
-//             TextSubcommand::Verify(opts) => opts.excutor().await,
-//             TextSubcommand::Generate(opts) => opts.excutor().await,
-//         }
-//     }
-// }

@@ -29,14 +29,3 @@ pub enum SubCommand {
     #[command(subcommand, about = "HTTP Client")]
     Http(HttpSubcommand),
 }
-// impl CmdExcutor for SubCommand {
-//     async fn excutor(self) -> anyhow::Result<()> {
-//         match self {
-//             SubCommand::Csv(opts) => opts.excutor().await,
-//             SubCommand::GenPass(opts) => opts.excutor().await,
-//             SubCommand::Base64(cmd) => cmd.excutor().await,
-//             SubCommand::Text(cmd) => cmd.excutor().await,
-//             SubCommand::Http(cmd) => cmd.excutor().await,
-//         }
-//     }
-// }

@@ -82,11 +82,3 @@ impl CmdExcutor for Base64DecodeOpts {
         Ok(())
     }
 }
-// impl CmdExcutor for Base64Subcommand {
-//     async fn excutor(self) -> anyhow::Result<()> {
-//         match self {
-//             Base64Subcommand::Encode(opts) => opts.excutor().await,
-//             Base64Subcommand::Decode(opts) => opts.excutor().await,
-//         }
-//     }
-// }
