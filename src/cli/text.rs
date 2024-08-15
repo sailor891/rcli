@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use enum_dispatch::enum_dispatch;
 use std::fmt;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -8,6 +9,7 @@ use tokio::fs;
 use crate::{process_text_generate, process_text_sign, process_text_verify, CmdExcutor};
 
 #[derive(Debug, Parser)]
+#[enum_dispatch(CmdExcutor)]
 pub enum TextSubcommand {
     #[command(about = "Sign a text file")]
     Sign(TextSignOpts),
@@ -124,12 +126,12 @@ impl CmdExcutor for TextKeyGenerateOpts {
         Ok(())
     }
 }
-impl CmdExcutor for TextSubcommand {
-    async fn excutor(self) -> anyhow::Result<()> {
-        match self {
-            TextSubcommand::Sign(opts) => opts.excutor().await,
-            TextSubcommand::Verify(opts) => opts.excutor().await,
-            TextSubcommand::Generate(opts) => opts.excutor().await,
-        }
-    }
-}
+// impl CmdExcutor for TextSubcommand {
+//     async fn excutor(self) -> anyhow::Result<()> {
+//         match self {
+//             TextSubcommand::Sign(opts) => opts.excutor().await,
+//             TextSubcommand::Verify(opts) => opts.excutor().await,
+//             TextSubcommand::Generate(opts) => opts.excutor().await,
+//         }
+//     }
+// }
