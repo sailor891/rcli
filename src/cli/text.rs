@@ -3,6 +3,9 @@ use clap::Parser;
 use std::fmt;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use tokio::fs;
+
+use crate::{process_text_generate, process_text_sign, process_text_verify, CmdExcutor};
 
 #[derive(Debug, Parser)]
 pub enum TextSubcommand {
@@ -94,5 +97,39 @@ fn verify_path(path: &str) -> Result<PathBuf, &'static str> {
         Ok(path.into())
     } else {
         Err("Path does not exist or is a directory")
+    }
+}
+impl CmdExcutor for TextSignOpts {
+    async fn excutor(self) -> anyhow::Result<()> {
+        let signed = process_text_sign(&self.input, &self.key, self.format)?;
+        println!("{}", signed);
+        Ok(())
+    }
+}
+impl CmdExcutor for TextVerifyOpts {
+    async fn excutor(self) -> anyhow::Result<()> {
+        match process_text_verify(&self.input, &self.key, &self.sign, self.format)? {
+            true => println!("✓ Signature verified"),
+            false => println!("✗ Signature verification failed"),
+        }
+        Ok(())
+    }
+}
+impl CmdExcutor for TextKeyGenerateOpts {
+    async fn excutor(self) -> anyhow::Result<()> {
+        let keys = process_text_generate(self.format)?;
+        for (k, v) in keys {
+            fs::write(self.output.join(k), v).await?;
+        }
+        Ok(())
+    }
+}
+impl CmdExcutor for TextSubcommand {
+    async fn excutor(self) -> anyhow::Result<()> {
+        match self {
+            TextSubcommand::Sign(opts) => opts.excutor().await,
+            TextSubcommand::Verify(opts) => opts.excutor().await,
+            TextSubcommand::Generate(opts) => opts.excutor().await,
+        }
     }
 }

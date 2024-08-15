@@ -1,8 +1,10 @@
-use anyhow::Result;
+use anyhow::{Ok, Result};
 use clap::Parser;
 use std::fmt;
 use std::path::Path;
 use std::str::FromStr;
+
+use crate::{process_decode, process_encode, CmdExcutor};
 
 #[derive(Debug, Parser)]
 pub enum Base64Subcommand {
@@ -63,4 +65,26 @@ fn verify_input_file(input: &str) -> Result<String, anyhow::Error> {
         return Ok(input.to_string());
     }
     Err(anyhow::anyhow!("Invalid input file"))
+}
+impl CmdExcutor for Base64EncodeOpts {
+    async fn excutor(self) -> anyhow::Result<()> {
+        let encoded = process_encode(&self.input, self.format)?;
+        println!("{}", encoded);
+        Ok(())
+    }
+}
+impl CmdExcutor for Base64DecodeOpts {
+    async fn excutor(self) -> anyhow::Result<()> {
+        let decoded = process_decode(&self.input, self.format)?;
+        println!("{}", decoded);
+        Ok(())
+    }
+}
+impl CmdExcutor for Base64Subcommand {
+    async fn excutor(self) -> anyhow::Result<()> {
+        match self {
+            Base64Subcommand::Encode(opts) => opts.excutor().await,
+            Base64Subcommand::Decode(opts) => opts.excutor().await,
+        }
+    }
 }

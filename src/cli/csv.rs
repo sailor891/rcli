@@ -3,6 +3,8 @@ use std::fmt;
 use std::path::Path;
 use std::str::FromStr;
 
+use crate::{process_csv, CmdExcutor};
+
 #[derive(Debug, Clone, Copy)]
 pub enum OutputFormat {
     Json,
@@ -65,5 +67,16 @@ impl FromStr for OutputFormat {
 impl fmt::Display for OutputFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Into::<&str>::into(*self))
+    }
+}
+
+impl CmdExcutor for CsvOpts {
+    async fn excutor(self) -> anyhow::Result<()> {
+        let output = if let Some(output) = self.output {
+            output.clone()
+        } else {
+            format!("output.{}", self.format)
+        };
+        process_csv(&self.input, output, self.format)
     }
 }
