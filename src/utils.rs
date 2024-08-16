@@ -17,3 +17,9 @@ pub fn verify_path(path: &str) -> Result<PathBuf, &'static str> {
         Err("Path does not exist or is a directory")
     }
 }
+pub fn get_reader_content(reader: &mut dyn Read) -> Result<Vec<u8>> {
+    let mut buf = String::new();
+    reader.read_to_string(&mut buf)?;
+    let buf = buf.trim();
+    Ok(buf.as_bytes().to_vec())
+}

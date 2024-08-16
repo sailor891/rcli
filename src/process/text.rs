@@ -1,14 +1,19 @@
 use crate::cli::TextSignFormat;
-use crate::process_genpass;
 use crate::utils::get_reader;
-use anyhow::Result;
+use crate::{get_reader_content, process_genpass};
+use anyhow::{Ok, Result};
 use base64::prelude::*;
+use chacha20poly1305::aead::Aead;
+use chacha20poly1305::Key;
+use chacha20poly1305::{
+    aead::{AeadCore, KeyInit, OsRng},
+    ChaCha20Poly1305, Nonce,
+};
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
-use rand::rngs::OsRng;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 pub trait TextSign {
     // 动态分派reader
     fn sign(&self, reader: &mut dyn Read) -> Result<Vec<u8>>;
@@ -31,6 +36,10 @@ pub trait KeyLoader {
     where
         Self: Sized;
 }
+pub struct Chacha20 {
+    key: Key,
+    nonce: Nonce,
+}
 pub fn process_text_sign(input: &str, key: &str, format: TextSignFormat) -> Result<String> {
     let mut reader = get_reader(input)?;
     let signed = match format {
@@ -42,6 +51,7 @@ pub fn process_text_sign(input: &str, key: &str, format: TextSignFormat) -> Resu
             let signer = Ed25519Signer::load(key)?;
             signer.sign(&mut reader)?
         }
+        _ => return Err(anyhow::anyhow!("Invalid text sign format")),
     };
     Ok(BASE64_STANDARD.encode(signed))
 }
@@ -64,6 +74,7 @@ pub fn process_text_verify(
             let verify = Ed25519Verifier::load(key)?;
             verify.verify(&mut reader, &sign)?
         }
+        _ => return Err(anyhow::anyhow!("Invalid text sign format")),
     };
     Ok(verified)
 }
@@ -79,6 +90,7 @@ pub fn process_text_generate(format: TextSignFormat) -> Result<HashMap<&'static 
     match format {
         TextSignFormat::Blake3 => Blake3::generate(),
         TextSignFormat::Ed25519 => Ed25519Signer::generate(),
+        TextSignFormat::ChaCha20 => Chacha20::generate(),
     }
 }
 fn get_key_decode(path: impl AsRef<Path>) -> Result<Vec<u8>> {
@@ -86,6 +98,7 @@ fn get_key_decode(path: impl AsRef<Path>) -> Result<Vec<u8>> {
     let mut reader = File::open(path)?;
     reader.read_to_string(&mut buf)?;
     let buf = buf.trim();
+    // println!("{:?}",buf);
     let key = BASE64_STANDARD.decode(buf.as_bytes())?;
     Ok(key)
 }
@@ -194,5 +207,77 @@ impl Ed25519Verifier {
         let key = VerifyingKey::from_bytes(key)?;
         let signer = Self::new(key);
         Ok(signer)
+    }
+}
+impl Chacha20 {
+    fn read_key(path: PathBuf) -> Result<Vec<u8>> {
+        let mut p = File::open(path)?;
+        let mut buf = String::new();
+        p.read_to_string(&mut buf)?;
+        let buf = buf.trim();
+        let buf = BASE64_URL_SAFE_NO_PAD.decode(buf.as_bytes())?;
+        Ok(buf)
+    }
+    fn new(key: Key, nonce: Nonce) -> Self {
+        Self { key, nonce }
+    }
+    fn try_new(path: &str) -> Result<Self> {
+        let err = format!("chacha20 key/nonce not in dir:{}", path);
+        let path = Path::new(path);
+        let key = path.join("chacha20.key");
+        let nonce = path.join("chacha20.nonce");
+        let key = Self::read_key(key).expect(&err);
+        let nonce = Self::read_key(nonce).expect(&err);
+        let key = Key::clone_from_slice(&key);
+        let nonce = Nonce::clone_from_slice(&nonce);
+        Ok(Self::new(key, nonce))
+    }
+    pub fn generate() -> Result<HashMap<&'static str, String>> {
+        let key = ChaCha20Poly1305::generate_key(&mut OsRng);
+        let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
+        let mut mp = HashMap::new();
+        let key = BASE64_URL_SAFE_NO_PAD.encode(key.as_slice());
+        let nonce = BASE64_URL_SAFE_NO_PAD.encode(nonce.as_slice());
+        mp.insert("chacha20.key", key);
+        mp.insert("chacha20.nonce", nonce);
+        Ok(mp)
+    }
+    pub fn load(path: &str) -> Result<Self> {
+        let chacha20 = Chacha20::try_new(path)?;
+        Ok(chacha20)
+    }
+    pub fn encrypt(self, reader: &mut dyn Read) -> Result<String> {
+        let data = get_reader_content(reader)?;
+        let cipher = ChaCha20Poly1305::new(&self.key);
+        let nonce = self.nonce;
+        let ciphertext = cipher.encrypt(&nonce, data.as_slice()).unwrap();
+        Ok(BASE64_URL_SAFE_NO_PAD.encode(ciphertext))
+    }
+    pub fn decrypt(self, reader: &mut dyn Read) -> Result<String> {
+        let data = get_reader_content(reader)?;
+        let data = BASE64_URL_SAFE_NO_PAD.decode(data)?;
+        let cipher = ChaCha20Poly1305::new(&self.key);
+        let nonce = self.nonce;
+        let plaintext = cipher.decrypt(&nonce, data.as_slice()).unwrap();
+        Ok(String::from_utf8(plaintext)?)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use chacha20poly1305::{
+        aead::{Aead, AeadCore, KeyInit, OsRng},
+        ChaCha20Poly1305,
+    };
+    #[test]
+    fn it_works() {
+        let key = ChaCha20Poly1305::generate_key(&mut OsRng);
+        let cipher = ChaCha20Poly1305::new(&key);
+        let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng); // 96-bits; unique per message
+        let ciphertext = cipher
+            .encrypt(&nonce, b"plaintext message".as_ref())
+            .unwrap();
+        let plaintext = cipher.decrypt(&nonce, ciphertext.as_ref()).unwrap();
+        assert_eq!(&plaintext, b"plaintext message");
     }
 }
