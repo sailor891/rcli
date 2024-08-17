@@ -3,10 +3,10 @@ mod base64;
 mod csv;
 mod genpass;
 mod http;
+mod jwt;
 mod text;
-
 // 向外暴露数据结构
-pub use self::{base64::*, csv::*, genpass::*, http::*, text::*};
+pub use self::{base64::*, csv::*, genpass::*, http::*, jwt::*, text::*};
 use clap::Parser;
 use enum_dispatch::enum_dispatch;
 #[derive(Debug, Parser)]
@@ -28,4 +28,6 @@ pub enum SubCommand {
     Text(TextSubcommand),
     #[command(subcommand, about = "HTTP Client")]
     Http(HttpSubcommand),
+    #[command(subcommand, about = "JWT Signature/Verify")]
+    Jwt(JwtSubcommand),
 }

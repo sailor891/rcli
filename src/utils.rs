@@ -23,3 +23,12 @@ pub fn get_reader_content(reader: &mut dyn Read) -> Result<Vec<u8>> {
     let buf = buf.trim();
     Ok(buf.as_bytes().to_vec())
 }
+pub fn verify_input_file(input: &str) -> Result<String, anyhow::Error> {
+    if input == "-" {
+        return Ok(input.to_string());
+    }
+    if Path::new(input).exists() {
+        return Ok(input.to_string());
+    }
+    Err(anyhow::anyhow!("Invalid input file"))
+}
