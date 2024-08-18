@@ -35,8 +35,8 @@ pub struct JwtVerifyopts {
     pub aud: String,
     #[arg(long)]
     pub alg: Algorithm,
-    #[arg(short, long,value_parser=verify_input_file,default_value="-")]
-    pub path: String,
+    #[arg(short, long)]
+    pub token: String,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JwtClaims {
@@ -93,11 +93,8 @@ impl CmdExcutor for JwtSignOpts {
 }
 impl CmdExcutor for JwtVerifyopts {
     async fn excutor(self) -> Result<()> {
-        let mut reader = get_reader(&self.path)?;
-        let token = get_reader_content(&mut reader)?;
-        let token = String::from_utf8(token)?;
         let key = DecodingKey::from_secret(JWT_SECRET.as_ref());
-        let text = jwt_decode(token, key, self.sub, self.aud, self.alg)?;
+        let text = jwt_decode(self.token, key, self.sub, self.aud, self.alg)?;
         println!("{:?}", text);
         Ok(())
     }
